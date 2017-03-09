@@ -6,7 +6,7 @@
     android:paddingRight="0dp"
     android:paddingTop="0dp"
     android:paddingBottom="0dp"
-    tools:context=".MainActivity$PlaceholderFragment">
+    tools:context=".ForecastFragment">
 
     <ListView
         android:id="@+id/listview_forecast"
