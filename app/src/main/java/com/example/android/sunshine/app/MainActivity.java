@@ -1,5 +1,7 @@
 package com.example.android.sunshine.app;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -11,10 +13,20 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+
+        SharedPreferences settings = getPreferences(MODE_PRIVATE);
+        String location = settings.getString(
+                getString(R.string.pref_location_key),
+                getString(R.string.pref_location_default));
+
         if (savedInstanceState == null) {
+            ForecastFragment fragment = new ForecastFragment();
+            fragment.setLocation(location);
+
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment())
+                    .add(R.id.container, fragment)
                     .commit();
         }
     }
@@ -35,6 +47,9 @@ public class MainActivity extends ActionBarActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivity(settingsIntent);
+
             return true;
         }
 

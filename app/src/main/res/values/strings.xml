@@ -7,5 +7,9 @@
     <string name="hardcoded_forecast">Today - Sunny - 88 / 63</string>
     <string name="action_refresh">Refresh</string>
     <string name="title_activity_detail">Forecast Details</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="pref_location_default" translatable="false">Bangalore</string>
+    <string name="pref_location_label">Location</string>
+    <string name="pref_location_key" translatable="false">location</string>
 
 </resources>

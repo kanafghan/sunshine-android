@@ -19,7 +19,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import org.json.JSONArray;
@@ -43,6 +42,8 @@ public class ForecastFragment extends Fragment {
     protected Intent detailIntent;
 
     private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+
+    private String location;
 
     public ForecastFragment() {
     }
@@ -101,7 +102,7 @@ public class ForecastFragment extends Fragment {
                 Log.i(LOG_TAG, "Refreshing...");
 
                 FetchWeatherTask task = new FetchWeatherTask();
-                task.execute("Bangalore");
+                task.execute(location);
 
                 return true;
             default:
@@ -299,5 +300,9 @@ public class ForecastFragment extends Fragment {
 
             return resultStrs;
         }
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 }
