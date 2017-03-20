@@ -4,6 +4,7 @@ package com.example.android.sunshine.app;
  * Created by iceman on 28/11/16.
  */
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -38,6 +40,7 @@ import java.util.List;
 public class ForecastFragment extends Fragment {
 
     protected ArrayAdapter<String> mForecastsAdapter;
+    protected Intent detailIntent;
 
     private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
@@ -70,7 +73,18 @@ public class ForecastFragment extends Fragment {
                 weekForecast);
 
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-        listView.setAdapter((ListAdapter) mForecastsAdapter);
+        listView.setAdapter(mForecastsAdapter);
+
+        detailIntent = new Intent(getActivity(), DetailActivity.class);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String data = mForecastsAdapter.getItem(i);
+
+                detailIntent.putExtra(Intent.EXTRA_TEXT, data);
+                startActivity(detailIntent);
+            }
+        });
 
         return rootView;
     }
