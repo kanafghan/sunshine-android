@@ -114,8 +114,12 @@ public class ForecastFragment extends Fragment {
                 getString(R.string.pref_location_key),
                 getString(R.string.pref_location_default)
         );
+        String unit = settings.getString(
+                getString(R.string.pref_units_key),
+                getString(R.string.pref_units_metric)
+        );
 
-        task.execute(location);
+        task.execute(location, unit);
     }
 
     public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
@@ -142,7 +146,7 @@ public class ForecastFragment extends Fragment {
                 urlBuilder.path("/data/2.5/forecast/daily");
                 urlBuilder.appendQueryParameter("q", params[0]);
                 urlBuilder.appendQueryParameter("mode", "json");
-                urlBuilder.appendQueryParameter("units", "metric");
+                urlBuilder.appendQueryParameter("units", params[1]);
                 urlBuilder.appendQueryParameter("cnt", "7");
                 urlBuilder.appendQueryParameter("appid", "b3b7e3a7ad58930185edd67feb8f8ab7");
                 Log.v(LOG_TAG, "URL: " + urlBuilder.toString());
@@ -227,7 +231,14 @@ public class ForecastFragment extends Fragment {
         /**
          * Prepare the weather high/lows for presentation.
          */
-        private String formatHighLows(double high, double low) {
+        private String formatHighLows(double high, double low, String unit) {
+            if (unit.equals(getString(R.string.pref_units_imperial))) {
+                high = (high * 1.8) + 32;
+                low = (low * 1.8) + 32;
+            } else if (!unit.equals(getString(R.string.pref_units_metric))) {
+                Log.d(LOG_TAG, "Unit not found: " + unit);
+            }
+
             // For presentation, assume the user doesn't care about tenths of a degree.
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
@@ -274,6 +285,13 @@ public class ForecastFragment extends Fragment {
             // now we work exclusively in UTC
             dayTime = new Time();
 
+            SharedPreferences sharedPrefs =
+                    PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String unit = sharedPrefs.getString(
+                    getString(R.string.pref_units_key),
+                    getString(R.string.pref_units_metric)
+            );
+
             String[] resultStrs = new String[numDays];
             for(int i = 0; i < weatherArray.length(); i++) {
                 // For now, using the format "Day, description, hi/low"
@@ -302,7 +320,7 @@ public class ForecastFragment extends Fragment {
                 double high = temperatureObject.getDouble(OWM_MAX);
                 double low = temperatureObject.getDouble(OWM_MIN);
 
-                highAndLow = formatHighLows(high, low);
+                highAndLow = formatHighLows(high, low, unit);
                 resultStrs[i] = day + " - " + description + " - " + highAndLow;
             }
 
