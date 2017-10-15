@@ -5,11 +5,9 @@ package com.example.android.sunshine.app;
  */
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -26,11 +24,11 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.sunshine.app.data.WeatherContract;
-
+import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
 
 public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
+    private final String LOG_TAG = ForecastFragment.class.getSimpleName();
 
     static final int FORECAST_LOADER = 0;
 
@@ -66,7 +64,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     private static final String SELECTED_KEY = "selected_position";
 
-    protected ForecastAdapter mForecastsAdapter;
+    protected ForecastAdapter mForecastAdapter;
 
     protected ListView mListView;
 
@@ -93,8 +91,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         mListView = (ListView) rootView.findViewById(R.id.listview_forecast);
 
-        mForecastsAdapter = new ForecastAdapter(getActivity(), null, 0);
-        mListView.setAdapter(mForecastsAdapter);
+        mForecastAdapter = new ForecastAdapter(getActivity(), null, 0);
+        mListView.setAdapter(mForecastAdapter);
 
         // detailIntent = new Intent(getActivity(), DetailActivity.class);
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -116,7 +114,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             }
         });
 
-        mForecastsAdapter.setUseTodayLayout(mUseTodayLayout);
+        mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
 
         return rootView;
     }
@@ -132,7 +130,13 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             case R.id.action_refresh:
                 Log.i(LOG_TAG, "Refreshing...");
 
-                this.updateWeather();
+                updateWeather();
+
+                return true;
+            case R.id.action_map:
+                Log.i(LOG_TAG, "Opening map...");
+
+                openPreferredLocationInMap();
 
                 return true;
             default:
@@ -140,20 +144,33 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         }
     }
 
+    private void openPreferredLocationInMap() {
+        if (mForecastAdapter == null) {
+            return;
+        }
+
+        Cursor c = mForecastAdapter.getCursor();
+        if (c == null) {
+            return;
+        }
+
+        c.moveToPosition(0);
+        String posLat = c.getString(COL_COORD_LAT);
+        String posLong = c.getString(COL_COORD_LONG);
+        Uri geoLocation = Uri.parse("geo:" + posLat + "," + posLong);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(geoLocation);
+
+        if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            Log.d(LOG_TAG, "Couldn't call " + geoLocation.toString() + ", no receiving apps installed!");
+        }
+    }
+
     private void updateWeather() {
-        FetchWeatherTask task = new FetchWeatherTask(this.getActivity());
-
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String location = settings.getString(
-                getString(R.string.pref_location_key),
-                getString(R.string.pref_location_default)
-        );
-        String unit = settings.getString(
-                getString(R.string.pref_units_key),
-                getString(R.string.pref_units_metric)
-        );
-
-        task.execute(location, unit);
+        SunshineSyncAdapter.syncImmediately(getActivity());
     }
 
     @Override
@@ -179,8 +196,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (mForecastsAdapter != null) {
-            mForecastsAdapter.swapCursor(data);
+        if (mForecastAdapter != null) {
+            mForecastAdapter.swapCursor(data);
         }
 
         if (mListView != null && mPosition != ListView.INVALID_POSITION) {
@@ -190,7 +207,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Override
     public void onLoaderReset(Loader loader) {
-        mForecastsAdapter.swapCursor(null);
+        mForecastAdapter.swapCursor(null);
     }
 
     @Override
@@ -213,7 +230,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         Cursor cur = getActivity().getContentResolver().query(weatherForLocationUri,
                 null, null, null, sortOrder);
-        mForecastsAdapter.swapCursor(cur);
+        mForecastAdapter.swapCursor(cur);
     }
 
     /**
@@ -230,8 +247,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     public void setUseTodayLayout(boolean useTodayLayout) {
         mUseTodayLayout = useTodayLayout;
-        if (mForecastsAdapter != null) {
-            mForecastsAdapter.setUseTodayLayout(mUseTodayLayout);
+        if (mForecastAdapter != null) {
+            mForecastAdapter.setUseTodayLayout(mUseTodayLayout);
         }
     }
 }
